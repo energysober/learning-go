@@ -3,21 +3,11 @@ package provider
 import (
 	"container/list"
 	"fmt"
-	"github.com/learning-go/go-web/session/session"
 	"sync"
 	"time"
 )
 
-var (
-	MemoryProviderType = "memory"
-)
-
-func init() {
-	pder.sessions = make(map[string]*list.Element, 0)
-	session.Registry(MemoryProviderType, pder)
-}
-
-var pder = &MemoryProvider{}
+var pder = &MemoryProvider{list: list.New()}
 
 type MemoryProvider struct {
 	lock     sync.Mutex
@@ -25,7 +15,7 @@ type MemoryProvider struct {
 	list     *list.List
 }
 
-func (p *MemoryProvider) SessionInit(sid string) (session.Session, error) {
+func (p *MemoryProvider) SessionInit(sid string) (Session, error) {
 	p.lock.Lock()
 	defer p.lock.Unlock()
 	v := make(map[interface{}]interface{}, 0)
@@ -35,7 +25,7 @@ func (p *MemoryProvider) SessionInit(sid string) (session.Session, error) {
 	return newSess, nil
 }
 
-func (p *MemoryProvider) SessionRead(sid string) (session.Session, error) {
+func (p *MemoryProvider) SessionRead(sid string) (Session, error) {
 	if element, ok := p.sessions[sid]; ok {
 		return element.Value.(*MemorySessionStore), nil
 	} else {

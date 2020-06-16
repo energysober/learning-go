@@ -1,4 +1,6 @@
-package session
+package provider
+
+import "container/list"
 
 // Provides global providers map
 var Provides = make(map[string]Provider)
@@ -28,4 +30,13 @@ func Registry(name string, provider Provider) {
 		panic("session: Registry called twice for provider " + name)
 	}
 	Provides[name] = provider
+}
+
+var (
+	MemoryProviderType = "memory"
+)
+
+func init() {
+	pder.sessions = make(map[string]*list.Element, 0)
+	Registry(MemoryProviderType, pder)
 }

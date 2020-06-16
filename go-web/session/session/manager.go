@@ -13,24 +13,26 @@ import (
 )
 
 var defaultSessionProvider = provider.MemoryProviderType
-var globalSessionManager *Manager
+
+// GlobalSessionManager
+var GlobalSessionManager *Manager
 
 func init() {
-	globalSessionManager, _ = NewManager(defaultSessionProvider, "sessionid", 3600)
-	go globalSessionManager.GC()
+	GlobalSessionManager, _ = NewManager(defaultSessionProvider, "sessionid", 3600)
+	//go GlobalSessionManager.GC()
 }
 
 // Manager session manager
 type Manager struct {
 	cookieName  string
-	provider    Provider
+	provider    provider.Provider
 	lock        sync.Mutex
 	maxLifeTime int64
 }
 
 // NewManager
 func NewManager(providerName, cookieName string, maxLifeTime int64) (*Manager, error) {
-	p, ok := Provides[providerName]
+	p, ok := provider.Provides[providerName]
 	if !ok {
 		return nil, fmt.Errorf("not support provider type for %s", providerName)
 	}
@@ -51,7 +53,7 @@ func (manager *Manager) sessionId() string {
 	return base64.URLEncoding.EncodeToString(b)
 }
 
-func (manager *Manager) sessionStart(w http.ResponseWriter, r *http.Request) (session Session) {
+func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (session provider.Session) {
 	manager.lock.Lock()
 	defer manager.lock.Unlock()
 	cookie, err := r.Cookie(manager.cookieName)
@@ -67,7 +69,7 @@ func (manager *Manager) sessionStart(w http.ResponseWriter, r *http.Request) (se
 	return
 }
 
-func (manager *Manager) sessionDestroy(w http.ResponseWriter, r *http.Request) {
+func (manager *Manager) SessionDestroy(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie(manager.cookieName)
 	if err != nil || cookie.Value == "" {
 		return
