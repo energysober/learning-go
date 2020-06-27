@@ -2,25 +2,23 @@ package session
 
 import (
 	"encoding/base64"
-	"fmt"
 	"math/rand"
 	"net/http"
 	"net/url"
+	"session/session/provider"
 	"sync"
 	"time"
-
-	"github.com/learning-go/go-web/session/session/provider"
 )
 
-var defaultSessionProvider = provider.MemoryProviderType
+//var defaultSessionProvider = MemoryProviderType
+//
+//// GlobalSessionManager
+//var GlobalSessionManager *Manager
 
-// GlobalSessionManager
-var GlobalSessionManager *Manager
-
-func init() {
-	GlobalSessionManager, _ = NewManager(defaultSessionProvider, "sessionid", 3600)
-	//go GlobalSessionManager.GC()
-}
+//func init() {
+//	GlobalSessionManager, _ = NewManager(defaultSessionProvider, "sessionid", 3600)
+//	go GlobalSessionManager.GC()
+//}
 
 // Manager session manager
 type Manager struct {
@@ -31,18 +29,19 @@ type Manager struct {
 }
 
 // NewManager
-func NewManager(providerName, cookieName string, maxLifeTime int64) (*Manager, error) {
-	p, ok := provider.Provides[providerName]
-	if !ok {
-		return nil, fmt.Errorf("not support provider type for %s", providerName)
+func NewManager(conf provider.Config, cookieName string, maxLifeTime int64) (*Manager, error) {
+	p, err := provider.NewProvider(conf)
+	if err != nil {
+		return nil, err
 	}
 
-	return &Manager{
+	m := &Manager{
 		cookieName:  cookieName,
 		provider:    p,
 		lock:        sync.Mutex{},
 		maxLifeTime: maxLifeTime,
-	}, nil
+	}
+	return m, nil
 }
 
 func (manager *Manager) sessionId() string {

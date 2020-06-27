@@ -7,7 +7,9 @@ import (
 	"time"
 )
 
-var pder = &MemoryProvider{list: list.New()}
+//var MemoryProviderType = "memory"
+//
+var pder = &MemoryProvider{}
 
 type MemoryProvider struct {
 	lock     sync.Mutex
@@ -97,4 +99,15 @@ func (s *MemorySessionStore) Delete(key interface{}) error {
 
 func (s *MemorySessionStore) SessionId() string {
 	return s.sid
+}
+
+// NewMemoryProvider
+func NewMemoryProvider() Provider {
+	if pder.list == nil {
+		pder.list = list.New()
+	}
+	if pder.sessions == nil {
+		pder.sessions = make(map[string]*list.Element, 0)
+	}
+	return pder
 }
