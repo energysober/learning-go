@@ -2,6 +2,7 @@ package provider
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/go-redis/redis"
 	"time"
 )
@@ -47,25 +48,32 @@ type RedisSessionStore struct {
 }
 
 func (s *RedisSessionStore) Set(key, value interface{}) error {
-	var val map[interface{}]interface{}
-	v := s.client.Get(s.sid)
-	if v.Err() != nil {
-		return v.Err()
-	}
-	err := json.Unmarshal([]byte(v.Val()), &val)
-	if err != nil {
-		return nil
-	}
+	val := make(map[string]interface{}, 0)
+	//v := s.client.Get(s.sid)
+	//if v.Err() != nil {
+	//	return v.Err()
+	//}
+	//err := json.Unmarshal([]byte(v.Val()), &val)
+	//if err != nil {
+	//	return nil
+	//}
 
-	val[key] = value
+	val[key.(string)] = value
 	val["timeAccessed"] = time.Now()
+	v, err := json.Marshal(val)
+	if err != nil {
+		return fmt.Errorf("json marshal session value error: %s", err.Error())
+	}
 
-	s.client.Set(s.sid, val, time.Second*3600)
+	cmd := s.client.Set(s.sid, v, time.Second*3600)
+	if cmd.Err() != nil {
+		return cmd.Err()
+	}
 	return nil
 }
 
 func (s *RedisSessionStore) Get(key interface{}) (interface{}, error) {
-	var value map[interface{}]interface{}
+	var value map[string]interface{}
 	v := s.client.Get(s.sid)
 	if v.Err() != nil {
 		return nil, v.Err()
@@ -75,7 +83,7 @@ func (s *RedisSessionStore) Get(key interface{}) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return value, nil
+	return value[key.(string)], nil
 }
 
 func (s *RedisSessionStore) Delete(key interface{}) error {
@@ -104,6 +112,9 @@ func NewRedisProvider(addr, password string) Provider {
 		Password: password,
 	}
 	cli := redis.NewClient(&opt)
+	if cli == nil {
+		panic("RedisProvider: new redis client error")
+	}
 	return &RedisProvider{
 		client: cli,
 	}

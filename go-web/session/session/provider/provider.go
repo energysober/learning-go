@@ -38,9 +38,12 @@ func Registry(name string, provider Provider) {
 
 type Config struct {
 	ProviderType string
-	Endpoints    string
-	User         string
-	Password     string
+	// option provider endpoint. such as redis cluster: 127.0.0.1:6379,127.0.0.1:2380
+	Endpoints string
+	// option provider auth user
+	User string
+	// option provider auth password
+	Password string
 }
 
 func NewProvider(config Config) (Provider, error) {

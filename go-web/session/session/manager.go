@@ -55,6 +55,7 @@ func (manager *Manager) sessionId() string {
 func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (session provider.Session) {
 	manager.lock.Lock()
 	defer manager.lock.Unlock()
+
 	cookie, err := r.Cookie(manager.cookieName)
 	if err != nil {
 		sid := manager.sessionId()
@@ -63,7 +64,7 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 		http.SetCookie(w, &cookie)
 	} else {
 		sid, _ := url.QueryUnescape(cookie.Value)
-		session, _ = manager.provider.SessionRead(sid)
+		session, err = manager.provider.SessionRead(sid)
 	}
 	return
 }
